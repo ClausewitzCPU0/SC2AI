@@ -104,9 +104,14 @@ I don't see why a game needs to be big for someone to love playing it. ——Nan
            await self.distribute_workers() # 分配农民采矿
    
    
-   run_game(maps.get("AutomatonLE"), [
-       Bot(Race.Protoss, SentdeBot()),
-       Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+   def main():
+       run_game(maps.get("AutomatonLE"), [
+           Bot(Race.Protoss, SentdeBot()),
+           Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+   
+   
+   if __name__ == '__main__':
+       main()
    ```
 
    如果游戏放在固态硬盘里，启动会快很多。效果图如下：
@@ -144,12 +149,8 @@ Run again and game should work now fully updated on 4 Jul 2019
 import sc2
 from sc2 import run_game, maps, Race, Difficulty
 from sc2.player import Bot, Computer
-
 from sc2.constants import NEXUS, PROBE, PYLON
-# 如果IDE报错，你需要这么写
-# from sc2.ids.unit_typeid import UnitTypeId as uid
-# NEXUS = uid.NEXUS
-# PROBE = uid.PROBE
+
 
 class SentdeBot(sc2.BotAI):
     async def on_step(self, iteration: int):
@@ -259,10 +260,14 @@ class SentdeBot(sc2.BotAI):
             await self.expand_now()
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Easy)], realtime=False)  # realtime设为False可以加速
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Easy)], realtime=False)  # realtime设为False可以加速
 
+
+if __name__ == '__main__':
+    main()
 ```
 
 效果如下，AI已经学会采气（虽然有时气矿建造位置诡异），并开始开三矿：
@@ -380,10 +385,14 @@ class SentdeBot(sc2.BotAI):
                     await self.do(s.attack(random.choice(self.known_enemy_units)))
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Hard)], realtime=False)  # realtime设为False可以加速
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Medium)], realtime=False)  # realtime设为False可以加速
 
+
+if __name__ == '__main__':
+    main()
 ```
 
 我们**首次战胜**了简单电脑以及中等难度电脑。仅用时8分29秒，~~AI稳稳超越<国服第三>太子的水平~~：
@@ -483,4 +492,102 @@ https://github.com/Dentosal/python-sc2/blob/master/examples/protoss/cannon_rush.
 
 ![1563282026446](assets/1563282026446.png)
 
-目前为止，我们所有的策略都是硬编码的，以后有机会再用深度学习做全自主决策的AI吧。
+
+
+### Ch7 SC2深度学习导言
+
+由于星际2有非常多的变量，建筑摆放位置、建造流程、timing点、交战操作和兵种配比都是极其复杂的问题，完全硬编码想要达到很好的效果难度非常大。
+
+到上一章为止，我们所有的策略都是硬编码的，还算不上真正的AI。从这章开始，我们要动手实现深度学习。那么问题来了：没有现成模型可用的情况下，如何应用深度学习？
+
+首先我们要把问题简化、抽象化。或许一个可行的解决办法是：先将行为分为几个决策（攻击敌方建筑、攻击敌方单位或是防守己方基地等），再应用到空闲单位上。后续我们再考虑将学习应用到运营流程中。
+
+我们现在知道了神经网络的输出，那么输入应该是什么呢？
+
+有人或许会说要用经典强化学习算法 *Q*-*learning* ，但是对这种问题来说过于复杂了。这会使用极大的数据样本，意义很小并且过程繁琐。原作者更倾向于使用evolutionary learning method。
+
+一个可用的、简单的神经网络是卷积神经网络（*Convolutional Neural Network*s, CNN），因为你可以用它来可视化一切。刚开始应用CNN时，你需要**尽可能地简化问题**。当初步实践成功时，再尝试更复杂的解决方案。
+
+首先，我们不在把追猎放在首要位置，我们想优先生产更多虚空。但追猎也必不可少，因为要靠它抵挡前期的一波。另外，我们保持attack函数不变。我们不再需要更多的BG，造一个BG只是为了解锁后面的建筑。（但实际我们仍需要生产少量的追猎。不过为了简化问题，先只生产虚空，后续再考虑这个）。build_offensive_force函数只生产虚空，这样就将作战单位简化为了一种（~~单一兵种作战？~~）。
+
+接下来我们就要使用测试数据并分辨正确和错误的选择。
+
+导入两个库：cv2（OpenCV）和numpy   
+
+部分代码：
+
+```python
+import cv2
+import numpy as np
+
+class SentdeBot(sc2.BotAI):
+    def __init__(self):
+        self.ITERATIONS_PER_MINUTE = 165
+        self.MAX_WORKERS = 80  # 限制最大农民数
+
+    async def on_step(self, iteration: int):  # iteration类似游戏时钟 每分钟165个迭代(待确认)
+        self.iteration = iteration
+        await self.distribute_workers()
+        await self.build_workers()
+        await self.build_pylons()
+        await self.build_assimilators()
+        await self.expand()
+        await self.offensive_force_buildings()
+        await self.build_offensive_force()
+        await self.attack()
+        await self.intel()
+
+    async def intel(self):
+        """
+        原作者随便起的名字，你也可以起名为AMD_YES
+        该函数将游戏运行过程可视化
+        """
+        print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
+        game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
+        # 画出每个基地的位置
+        for nexus in self.units(NEXUS):
+            nex_pos = nexus.position
+            cv2.circle(game_data, (int(nex_pos[0]), int(nex_pos[1])),
+                       10, (0, 255, 0), -1)  # 10代表尺寸,三坐标代表RGB,-1代表描边线宽
+
+        # 转换坐标
+        flipped = cv2.flip(game_data, 0)  # 翻转
+        resized = cv2.resize(flipped, dsize=None, fx=2, fy=2)
+        cv2.imshow('Intel', resized)
+        cv2.waitKey(1)  # 1ms
+        
+    async def offensive_force_buildings(self):
+        """
+        建造产兵/科技建筑
+        """
+        if self.units(PYLON).ready.exists:
+            pylon = self.units(PYLON).ready.random
+            # 建造BY
+            if self.units(GATEWAY).ready.exists and not self.units(CYBERNETICSCORE):
+                if self.can_afford(CYBERNETICSCORE) and not self.already_pending(CYBERNETICSCORE):
+                    await self.build(CYBERNETICSCORE, near=pylon)
+            # 建造1个BG解锁科技即可
+            elif len(self.units(GATEWAY)) < 1:
+                if self.can_afford(GATEWAY) and not self.already_pending(GATEWAY):
+                    await self.build(GATEWAY, near=pylon)
+            # 这个VS放的早啊
+            if self.units(CYBERNETICSCORE).ready.exists:
+                if len(self.units(STARGATE)) < (self.iteration / self.ITERATIONS_PER_MINUTE):
+                    if self.can_afford(STARGATE) and not self.already_pending(STARGATE):
+                        await self.build(STARGATE, near=pylon)
+
+    async def build_offensive_force(self):
+        """
+        建造战斗单位（只要虚空）
+        """
+        for sg in self.units(STARGATE).ready.noqueue:
+            if self.can_afford(VOIDRAY) and self.supply_left > 0:
+                await self.do(sg.train(VOIDRAY))
+```
+
+
+
+OpenCV库将每个基地的位置显示在模拟地图上：
+
+![1563295723744](assets/1563295723744.png)
+
