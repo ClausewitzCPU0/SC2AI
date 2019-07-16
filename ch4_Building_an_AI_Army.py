@@ -88,6 +88,11 @@ class SentdeBot(sc2.BotAI):
                 await self.do(gw.train(STALKER))
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Easy)], realtime=False)  # realtime设为False可以加速
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Easy)], realtime=False)  # realtime设为False可以加速
+
+
+if __name__ == '__main__':
+    main()

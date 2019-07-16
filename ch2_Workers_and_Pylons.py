@@ -35,9 +35,14 @@ class SentdeBot(sc2.BotAI):
             nexuses = self.units(NEXUS).ready
             if nexuses.exists:
                 if self.can_afford(PYLON):
-                    await  self.build(PYLON, near=nexuses.first) # near表示建造地点。后期可以用深度学习优化
+                    await  self.build(PYLON, near=nexuses.first)  # near表示建造地点。后期可以用深度学习优化
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+
+
+if __name__ == '__main__':
+    main()

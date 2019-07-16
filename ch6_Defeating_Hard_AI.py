@@ -131,7 +131,8 @@ class SentdeBot(sc2.BotAI):
 
         for UNIT in aggressive_units:
             # 如果数量比预定攻击单位数量多，那就主动出击，否则防守（此处疑似代码冗余）
-            if self.units(UNIT).amount>aggressive_units[UNIT][0] and self.units(UNIT).amount > aggressive_units[UNIT][1]:
+            if self.units(UNIT).amount > aggressive_units[UNIT][0] and self.units(UNIT).amount > aggressive_units[UNIT][
+                1]:
                 for s in self.units(UNIT).idle:
                     await self.do(s.attack(self.find_target(self.state)))
 
@@ -141,6 +142,11 @@ class SentdeBot(sc2.BotAI):
                         await self.do(s.attack(random.choice(self.known_enemy_units)))
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Hard)], realtime=False)  # realtime设为False可以加速
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Hard)], realtime=False)  # realtime设为False可以加速
+
+
+if __name__ == '__main__':
+    main()

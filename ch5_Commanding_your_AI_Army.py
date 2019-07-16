@@ -114,6 +114,11 @@ class SentdeBot(sc2.BotAI):
                     await self.do(s.attack(random.choice(self.known_enemy_units)))
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Hard)], realtime=False)  # realtime设为False可以加速
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Medium)], realtime=False)  # realtime设为False可以加速
+
+
+if __name__ == '__main__':
+    main()

@@ -12,6 +12,11 @@ class SentdeBot(sc2.BotAI):
         await self.distribute_workers()
 
 
-run_game(maps.get("AutomatonLE"), [
-    Bot(Race.Protoss, SentdeBot()),
-    Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+def main():
+    run_game(maps.get("AutomatonLE"), [
+        Bot(Race.Protoss, SentdeBot()),
+        Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+
+
+if __name__ == '__main__':
+    main()
