@@ -7,11 +7,6 @@ from sc2.player import Bot, Computer
 from sc2.constants import NEXUS, PROBE, PYLON
 
 
-# 如果IDE报错，你需要这么写
-# from sc2.ids.unit_typeid import UnitTypeId as uid
-# NEXUS = uid.NEXUS
-# PROBE = uid.PROBE
-
 class SentdeBot(sc2.BotAI):
     async def on_step(self, iteration: int):
         await self.distribute_workers()

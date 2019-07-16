@@ -9,11 +9,6 @@ from sc2.constants import NEXUS, PROBE, PYLON, ASSIMILATOR, GATEWAY, \
 import random
 
 
-# 如果IDE报错，你需要这么写
-# from sc2.ids.unit_typeid import UnitTypeId as uid
-# NEXUS = uid.NEXUS
-# PROBE = uid.PROBE
-
 class SentdeBot(sc2.BotAI):
     def __init__(self):
         self.ITERATIONS_PER_MINUTE = 165
@@ -78,8 +73,8 @@ class SentdeBot(sc2.BotAI):
         """
         建造产兵/科技建筑
         """
-        print('iterations:', self.iteration / self.ITERATIONS_PER_MINUTE)
-        print('iterations:', self.iteration)
+        # print('iterations:', self.iteration / self.ITERATIONS_PER_MINUTE)
+        # print('iterations:', self.iteration)
         if self.units(PYLON).ready.exists:
             pylon = self.units(PYLON).ready.random
             # 建造BY
