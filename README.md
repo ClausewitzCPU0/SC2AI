@@ -190,7 +190,7 @@ class SentdeBot(sc2.BotAI):
 
 "from sc2.constants import PROBE" not working 
 
-某些IDE造成的问题，直接用IDLE可以运行。
+某些IDE造成的问题，直接用IDLE可以运行。或者像我的代码里一样加上 `if __name__ == '__main__':`部分代码即可。
 
 https://github.com/Dentosal/python-sc2/issues/58
 
