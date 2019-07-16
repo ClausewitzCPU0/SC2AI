@@ -12,15 +12,25 @@ https://github.com/deepmind/pysc2
 
 https://www.youtube.com/watch?v=v3LJ6VvpfgI&list=PLQVvvaa0QuDcT3tPehHdisGMc8TInNqdq&index=2&t=0s
 
-单位名称查阅
+战术策略参考：
+
+https://github.com/Dentosal/python-sc2/tree/master/examples
+
+单位名称/科技树查阅：
 
 https://liquipedia.net/starcraft2/Protoss_Units_(Legacy_of_the_Void)
+
+https://liquipedia.net/starcraft2/Terran_Units_(Legacy_of_the_Void)
+
+https://liquipedia.net/starcraft2/Zerg_Units_(Legacy_of_the_Void)
+
+
 
 ## 前言
 
 本教程为简略的星际2 AI编写**入门**demo,属于**娱乐**性质。玩家观看此教程之后开发出的谐星AI（比如XieStar），与作者无关，希望能起到抛砖引玉的效果。
 
-使用者有一点Python基础和对星际2的粗略了解即可完成本教程。
+使用者有一点点Python基础和对星际2的粗略了解即可完成本教程。
 
 本人不是深度学习从业人员，也没有强大的硬件支持，因此暂时不涉及深度学习相关内容。
 
@@ -255,7 +265,7 @@ run_game(maps.get("AutomatonLE"), [
 
 ```
 
-效果如下，AI已经学会采气，并开始开三矿：
+效果如下，AI已经学会采气（虽然有时气矿建造位置诡异），并开始开三矿：
 
 ![1563203983259](assets/1563203983259.png)
 
@@ -309,3 +319,168 @@ class SentdeBot(sc2.BotAI):
 ```
 
 ![1563203612444](assets/1563203612444.png)
+
+
+
+### Ch5 血战简单电脑！给战斗单位下达指令
+
+这一节将为AI的战斗单位增加防御和进攻指令，并建造多个产兵建筑。在扩张的同时，AI会建造三个BG爆追猎，当追猎数量超过5个时会主动攻击视野中的敌人，超过15个时就会主动进攻敌方出生点。
+
+**部分**代码：
+
+```python
+import random
+
+class SentdeBot(sc2.BotAI):
+    async def on_step(self, iteration: int):
+        await self.distribute_workers()
+        await self.build_workers()
+        await self.build_pylons()
+        await self.build_assimilators()
+        await self.expand()
+        await self.offensive_force_buildings()
+        await self.build_offensive_force()
+        await self.attack()
+        
+	async def offensive_force_buildings(self):
+        """
+        建造产兵建筑
+        """
+        if self.units(PYLON).ready.exists:
+            pylon = self.units(PYLON).ready.random
+            if self.units(GATEWAY).ready.exists and not self.units(CYBERNETICSCORE):
+                if self.can_afford(CYBERNETICSCORE) and not self.already_pending(CYBERNETICSCORE):
+                    await self.build(CYBERNETICSCORE, near=pylon)
+            elif len(self.units(GATEWAY)) <= 3:
+                if self.can_afford(GATEWAY) and not self.already_pending(GATEWAY):
+                    await self.build(GATEWAY, near=pylon)
+	def find_target(self, state):
+        """
+        寻找敌方单位
+        注意这个函数不是异步的，不用加async
+        """
+        if len(self.known_enemy_units) > 0:
+            return random.choice(self.known_enemy_units)
+        elif len(self.known_enemy_structures) > 0:
+            return random.choice(self.known_enemy_structures)
+        else:
+            return self.enemy_start_locations[0]
+
+    async def attack(self):
+        """
+        控制追猎攻击视野内敌方单位
+        """
+        if self.units(STALKER).amount > 15:  # 追猎数量够多时主动出击
+            for s in self.units(STALKER).idle:
+                await self.do(s.attack(self.find_target(self.state)))
+
+        if self.units(STALKER).amount > 5:
+            if len(self.known_enemy_units) > 0:
+                for s in self.units(STALKER).idle:
+                    await self.do(s.attack(random.choice(self.known_enemy_units)))
+
+
+run_game(maps.get("AutomatonLE"), [
+    Bot(Race.Protoss, SentdeBot()),
+    Computer(Race.Protoss, Difficulty.Hard)], realtime=False)  # realtime设为False可以加速
+
+```
+
+我们**首次战胜**了简单电脑以及中等难度电脑。仅用时8分29秒，~~AI稳稳超越<国服第三>太子的水平~~：
+
+![img](assets/45a8910a19d8bc3e6179a52b8c8ba61ea9d34583.jpg)
+
+![1563265046795](assets/1563265046795.png)
+
+但AI输给了拥有多种兵种组合的**困难**电脑，第一波15个追猎过去，电脑的不朽/虚空已经出来了。仅凭追猎要打赢还是有难度。而且战斗过程中，AI不会操作残血追猎，极大地增加了战损。
+
+
+
+### Ch6 击败困难电脑！
+
+上一章AI完成了历史性任务：击败简单电脑。但是AI还不懂兵种组合，没有时间概念。这一章我们将优化产兵建筑数量，建立BG数量和时间的关系。AI在造好15个追猎就F2A了，而后续的追猎则是一个一个进攻对方基地，如果第一波进攻失败，那就成了添油战术送兵了。
+
+注意on_setp函数的iteration参数，这将和游戏时钟建立关系。
+
+这一节继续优化AI的建造流程。BG数量将粗略地和时间挂钩，同时生产农民也将持续优化（加上限制）。AI还将建造新的单位。同时，建造战斗单位的代码也需要调整，因为AI总是先生产便宜的单位，昂贵的单位就可能因为资源不足一直无法生产。
+
+```python
+class SentdeBot(sc2.BotAI):
+    def __init__(self):
+        self.ITERATIONS_PER_MINUTE = 165
+        self.MAX_WORKERS = 80  # 限制最大农民数
+
+    async def on_step(self, iteration: int):  # iteration类似游戏时钟 每分钟165个迭代(待确认)
+        self.iteration = iteration
+        await self.distribute_workers()
+        await self.build_workers()
+        await self.build_pylons()
+        await self.build_assimilators()
+        await self.expand()
+        await self.offensive_force_buildings()
+        await self.build_offensive_force()
+        await self.attack()
+
+    async def build_workers(self):
+        """
+        选择空闲基地建造农民
+        noqueue意味着当前建造列表为空
+        """
+        if len(self.units(NEXUS)) * 24 > len(self.units(PROBE)):  # 每矿农民补满就不补了
+            if len(self.units(PROBE)) < self.MAX_WORKERS:
+                for nexus in self.units(NEXUS).ready.noqueue:
+                    if self.can_afford(PROBE):
+                        await self.do(nexus.train(PROBE))
+    async def offensive_force_buildings(self):
+        """
+        建造产兵/科技建筑
+        """
+        print('iterations:', self.iteration / self.ITERATIONS_PER_MINUTE)
+        if self.units(PYLON).ready.exists:
+            pylon = self.units(PYLON).ready.random
+            # 建造BY
+            if self.units(GATEWAY).ready.exists and not self.units(CYBERNETICSCORE):
+                if self.can_afford(CYBERNETICSCORE) and not self.already_pending(CYBERNETICSCORE):
+                    await self.build(CYBERNETICSCORE, near=pylon)
+            # 建造更多BG
+            elif len(self.units(GATEWAY)) < ((self.iteration / self.ITERATIONS_PER_MINUTE) / 2):  # 粗略计算
+                if self.can_afford(GATEWAY) and not self.already_pending(GATEWAY):
+                    await self.build(GATEWAY, near=pylon)
+            # 这个VS放的早啊
+            if self.units(CYBERNETICSCORE).ready.exists:
+                if len(self.units(STARGATE)) < ((self.iteration / self.ITERATIONS_PER_MINUTE) / 2):
+                    if self.can_afford(STARGATE) and not self.already_pending(STARGATE):
+                        await self.build(STARGATE, near=pylon)
+
+    async def build_offensive_force(self):
+        """
+        建造战斗单位
+        """
+        for gw in self.units(GATEWAY).ready.noqueue:
+            if not self.units(STALKER).amount > self.units(VOIDRAY).amount:  # 粗略判断
+                if self.can_afford(STALKER) and self.supply_left > 0:
+                    await self.do(gw.train(STALKER))
+
+        for sg in self.units(STARGATE).ready.noqueue:
+            if self.can_afford(VOIDRAY) and self.supply_left > 0:
+                await self.do(sg.train(VOIDRAY))
+
+```
+
+当AI开始建造更多的建筑时，糟糕的摆放位置影响可能会越来越大。例如下图中，水晶和VS完全挡住了采矿的路径。~~令人智熄的操作.jpg~~
+
+![1563281298334](assets/1563281298334.png)
+
+经过一番血战，无敌虚空为AI拿下了第一场对战困难电脑的胜利（并不是100%的胜率）~~180人口虚空带追猎怎么输~~
+
+![1563281399727](assets/1563281399727.png)
+
+
+
+你也可以学习别人写好的程序，例如修电脑炮台并发表情跳他（也有可能电脑转进二矿，然后你的探机就会在别人家主矿修满地堡但就是不去别人二矿）
+
+https://github.com/Dentosal/python-sc2/blob/master/examples/protoss/cannon_rush.py
+
+![1563282026446](assets/1563282026446.png)
+
+目前为止，我们所有的策略都是硬编码的，以后有机会再用深度学习做全自主决策的AI吧。
