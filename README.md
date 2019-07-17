@@ -1,4 +1,4 @@
-# SC2 AI
+# SC2 AI 中文教程
 
 本文作者 @PolestarX **转载请注明出处** 
 
@@ -8,9 +8,11 @@
 
 https://github.com/deepmind/pysc2
 
-教程来自youtube [sentdex](https://www.youtube.com/channel/UCfzlCWGWYyIQ0aLC5w48gBQ) ，修复了一些原教程在当前版本可能出现的BUG
+原教程来自youtube [sentdex](https://www.youtube.com/channel/UCfzlCWGWYyIQ0aLC5w48gBQ) ，修复了一些原教程在当前版本可能出现的BUG
 
 https://www.youtube.com/watch?v=v3LJ6VvpfgI&list=PLQVvvaa0QuDcT3tPehHdisGMc8TInNqdq&index=2&t=0s
+
+https://pythonprogramming.net/scouting-visual-input-starcraft-ii-ai-python-sc2-tutorial/
 
 战术策略参考：
 
@@ -28,11 +30,11 @@ https://liquipedia.net/starcraft2/Zerg_Units_(Legacy_of_the_Void)
 
 ## 前言
 
-本教程为简略的星际2 AI编写**入门**demo,属于**娱乐**性质。玩家观看此教程之后开发出的谐星AI（比如XieStar），与作者无关，希望能起到抛砖引玉的效果。
+本教程为简略的星际2 AI编写**入门**demo,属于**娱乐**性质。玩家观看此教程之后开发出的谐星AI（比如XieStar），与作者无关。希望教程能起到抛砖引玉的效果。
 
 使用者有一点点Python基础和对星际2的粗略了解即可完成本教程。
 
-本人不是深度学习从业人员，也没有强大的硬件支持，因此暂时不涉及深度学习相关内容。
+本人不是深度学习从业人员，也没有强大的硬件支持，因此暂时不涉及深度学习相关内容。如果教程播放量比较多的话，再考虑后续的部分吧。当然英语过关的老哥也可以自行观看后续内容。deeplearning部分涉及到一些额外知识，推荐先选择性观看sentdex的machine learning series或者B站的莫烦教程，这样在后期训练模型时会对一些术语有一个初步的了解。
 
 感谢deepmind为开源社区做出的贡献，也向youtube的sentdex致敬。
 
@@ -99,7 +101,7 @@ I don't see why a game needs to be big for someone to love playing it. ——Nan
    from sc2.player import Bot, Computer
    
    
-   class SentdeBot(sc2.BotAI):
+   class SentdeBot(sc2.BotAI): # 查看BotAI的源码可以获得很多有用信息，例如函数定义等
        async def on_step(self, iteration: int):
            await self.distribute_workers() # 分配农民采矿
    
@@ -494,7 +496,7 @@ https://github.com/Dentosal/python-sc2/blob/master/examples/protoss/cannon_rush.
 
 
 
-### Ch7 SC2深度学习导言
+### Ch7 SC2深度学习导言（应用深度学习前的准备工作）
 
 由于星际2有非常多的变量，建筑摆放位置、建造流程、timing点、交战操作和兵种配比都是极其复杂的问题，完全硬编码想要达到很好的效果难度非常大。
 
@@ -591,3 +593,293 @@ OpenCV库将每个基地的位置显示在模拟地图上：
 
 ![1563295723744](assets/1563295723744.png)
 
+
+
+### Ch8 侦查以及更多可视化输入（还是准备工作）
+
+OpenCV生成的图形是为了让我们更好地了解到游戏内发生的事情。
+
+在这一章，我们要描绘更多的单位，并为它们增加不同的颜色和尺寸。
+
+```python
+    async def intel(self):
+        """
+        原作者随便起的名字，你也可以起名为amd
+        该函数将游戏运行过程可视化
+        """
+        print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
+        game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
+
+        # UNIT:[SIZE,(RGB COLOR)]
+        draw_dict = {
+            NEXUS: [15, (0, 255, 0)],
+            PYLON: [3, (20, 235, 0)],
+            PROBE: [1, (55, 200, 0)],
+            ASSIMILATOR: [2, (55, 200, 0)],
+            GATEWAY: [3, (200, 100, 0)],
+            CYBERNETICSCORE: [3, (150, 150, 0)],
+            STARGATE: [5, (255, 0, 0)],
+            VOIDRAY: [3, (255, 100, 0)],
+        }
+
+        # 画出每个单位的位置
+        for unit_type in draw_dict:
+            for unit in self.units(unit_type).ready:
+                pos = unit.position
+                cv2.circle(game_data, (int(pos[0]), int(pos[1])),
+                           draw_dict[unit_type][0], draw_dict[unit_type][1], -1)
+
+        # 转换坐标
+        flipped = cv2.flip(game_data, 0)  # 翻转
+        resized = cv2.resize(flipped, dsize=None, fx=2, fy=2)
+        cv2.imshow('Intel', resized)
+        cv2.waitKey(1)  # 1ms
+```
+
+![1563331295664](assets/1563331295664.png)
+
+在此之后，还要为AI增加侦查的能力（例如建造OB等）。侦查是十分重要的工作，因为神经网网络的输入就是依靠地图上能看到的信息。因此我们需要建造VR和OB。部分代码如下：
+
+```python
+from sc2 import run_game, maps, Race, Difficulty, position
+from sc2.constants import NEXUS, PROBE, PYLON, ASSIMILATOR, GATEWAY, \
+    CYBERNETICSCORE, STALKER, STARGATE, VOIDRAY, OBSERVER, ROBOTICSFACILITY
+    
+class SentdeBot(sc2.BotAI):
+    def __init__(self):
+        self.ITERATIONS_PER_MINUTE = 165
+        self.MAX_WORKERS = 80  # 限制最大农民数
+
+    async def on_step(self, iteration: int):  # iteration类似游戏时钟 每分钟165个迭代(待确认)
+        self.iteration = iteration
+        await self.scout()
+        await self.distribute_workers()
+        await self.build_workers()
+        await self.build_pylons()
+        await self.build_assimilators()
+        await self.expand()
+        await self.offensive_force_buildings()
+        await self.build_offensive_force()
+        await self.attack()
+        await self.intel()
+
+    def random_location_variance(self, enemy_start_location):
+        """
+        随机给出敌方主矿附近的侦查坐标
+        :param enemy_start_location: 敌方出生点
+        :return: 侦查坐标
+        """
+        x = enemy_start_location[0]
+        y = enemy_start_location[1]
+
+        x += ((random.randrange(-20, 20)) / 100) * enemy_start_location[0]
+        y += ((random.randrange(-20, 20)) / 100) * enemy_start_location[1]
+
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        if x > self.game_info.map_size[0]:
+            x = self.game_info.map_size[0]
+        if y > self.game_info.map_size[1]:
+            y = self.game_info.map_size[1]
+        # 无法直接返回xy二维坐标，大概因为游戏是三维的原因。需要用sc2的position转换坐标 注意传入的是tuple
+        go_to = position.Point2(position.Pointlike((x, y)))
+        return go_to
+
+    async def scout(self):
+        """
+        侦查部分
+        """
+        if len(self.units(OBSERVER)) > 0:
+            scout = self.units(OBSERVER)[0]
+            if scout.is_idle:
+                enemy_location = self.enemy_start_locations[0]
+                move_to = self.random_location_variance(enemy_location)
+                print(move_to)
+                await self.do(scout.move(move_to))
+        else:
+            for rf in self.units(ROBOTICSFACILITY).ready.noqueue:
+                if self.can_afford(OBSERVER) and self.supply_left > 0:
+                    await self.do(rf.train(OBSERVER))
+
+    async def intel(self):
+        """
+        原作者随便起的名字，你也可以起名为amd
+        该函数将游戏运行过程可视化
+        """
+        # print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
+        game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
+
+        # UNIT:[SIZE,(RGB COLOR)]
+        draw_dict = {
+            NEXUS: [15, (0, 255, 0)],
+            PYLON: [3, (20, 235, 0)],
+            PROBE: [1, (55, 200, 0)],
+            ASSIMILATOR: [2, (55, 200, 0)],
+            GATEWAY: [3, (200, 100, 0)],
+            CYBERNETICSCORE: [3, (150, 150, 0)],
+            STARGATE: [5, (255, 0, 0)],
+            VOIDRAY: [3, (255, 100, 0)],
+        }
+
+        # 画出每个单位的位置
+        for unit_type in draw_dict:
+            for unit in self.units(unit_type).ready:
+                pos = unit.position
+                cv2.circle(game_data, (int(pos[0]), int(pos[1])),
+                           draw_dict[unit_type][0], draw_dict[unit_type][1], -1)
+
+        # 画出敌方单位位置
+        main_base_names = ["nexus", "commandcenter", "hatchery"]
+        for enemy_building in self.known_enemy_structures:
+            pos = enemy_building.position
+            if enemy_building.name.lower() not in main_base_names:
+                cv2.circle(game_data, (int(pos[0]), int(pos[1])), 5, (200, 50, 212), -1)
+        for enemy_building in self.known_enemy_structures:
+            pos = enemy_building.position
+            if enemy_building.name.lower() in main_base_names:
+                cv2.circle(game_data, (int(pos[0]), int(pos[1])), 15, (0, 0, 255), -1)
+
+        # 区分战斗单位和工作单位
+        for enemy_unit in self.known_enemy_units:
+            if not enemy_unit.is_structure:
+                worker_names = ["probe",
+                                "scv",
+                                "drone"]
+                # if that unit is a PROBE, SCV, or DRONE... it's a worker
+                pos = enemy_unit.position
+                if enemy_unit.name.lower() in worker_names:
+                    cv2.circle(game_data, (int(pos[0]), int(pos[1])), 1, (55, 0, 155), -1)
+                else:
+                    cv2.circle(game_data, (int(pos[0]), int(pos[1])), 3, (50, 0, 215), -1)
+
+        # 画出OB位置，尺寸尽可能小，以突出侦查的重要信息
+        for obs in self.units(OBSERVER).ready:
+            pos = obs.position
+            cv2.circle(game_data, (int(pos[0]), int(pos[1])), 1, (255, 255, 255), -1)
+
+        # 转换坐标
+        flipped = cv2.flip(game_data, 0)  # 翻转
+        resized = cv2.resize(flipped, dsize=None, fx=2, fy=2)
+        cv2.imshow('Intel', resized)
+        cv2.waitKey(1)  # 1ms
+        
+    async def offensive_force_buildings(self):
+        """
+        建造产兵/科技建筑
+        """
+        if self.units(PYLON).ready.exists:
+            pylon = self.units(PYLON).ready.random
+            # 建造BY
+            if self.units(GATEWAY).ready.exists and not self.units(CYBERNETICSCORE):
+                if self.can_afford(CYBERNETICSCORE) and not self.already_pending(CYBERNETICSCORE):
+                    await self.build(CYBERNETICSCORE, near=pylon)
+            # 建造1个BG解锁科技即可
+            elif len(self.units(GATEWAY)) < 1:
+                if self.can_afford(GATEWAY) and not self.already_pending(GATEWAY):
+                    await self.build(GATEWAY, near=pylon)
+
+            # 造VR，准备出OB
+            if self.units(CYBERNETICSCORE).ready.exists:
+                if len(self.units(ROBOTICSFACILITY)) < 1:
+                    if self.can_afford(ROBOTICSFACILITY) and not self.already_pending(ROBOTICSFACILITY):
+                        await self.build(ROBOTICSFACILITY, near=pylon)
+
+            # 这个VS放的早啊
+            if self.units(CYBERNETICSCORE).ready.exists:
+                if len(self.units(STARGATE)) < (self.iteration / self.ITERATIONS_PER_MINUTE):
+                    if self.can_afford(STARGATE) and not self.already_pending(STARGATE):
+                        await self.build(STARGATE, near=pylon)
+```
+
+下图的白点就是OB，正飞向对方主矿侦查~~（然后就被炮台打下来了）~~
+
+![1563334027815](assets/1563334027815.png)
+
+
+
+### Ch9 建立神经网络训练数据
+
+在开展任何机器学习前，我们都要**建立自己的数据集**。这一章我们终于可以开始做这个最后的准备工作了。
+
+还有一点数据可视化的工作是：在图像左下角用横条形式追踪当前的资源和人口数据，为平衡战斗单位的资源/人口消耗做准备。
+
+![1563347842578](assets/1563347842578.png)
+
+接下来我们要修改attack函数，同时还要引入游戏结果（胜/负），以判断训练数据的正确性。
+
+我们对这个AI进行的第一项深度学习改造就是让AI判断攻击选择的正确与否。
+
+```python
+    async def attack(self):
+        """
+        随机做出不同的攻击选择
+        """
+        if len(self.units(VOIDRAY).idle) > 0:
+            choice = random.randrange(0, 4)
+            target = False
+            if self.iteration > self.do_something_after:
+                if choice == 0:
+                    # no attack
+                    wait = random.randrange(20, 165)
+                    self.do_something_after = self.iteration + wait
+
+                elif choice == 1:
+                    # attack_unit_closest_nexus
+                    if len(self.known_enemy_units) > 0:
+                        target = self.known_enemy_units.closest_to(random.choice(self.units(NEXUS)))
+
+                elif choice == 2:
+                    # attack enemy structures
+                    if len(self.known_enemy_structures) > 0:
+                        target = random.choice(self.known_enemy_structures)
+
+                elif choice == 3:
+                    # attack_enemy_start
+                    target = self.enemy_start_locations[0]
+
+                if target:
+                    for vr in self.units(VOIDRAY).idle:
+                        await self.do(vr.attack(target))
+                y = np.zeros(4)  # 表示神经网络的输出，类似 [1,0,0,0],这个list表示不攻击（choice=1）
+                y[choice] = 1
+                print(y)
+                self.train_data.append([y, self.flipped])  # 收集测试数据
+
+```
+
+新建一个train_data文件夹，程序在每次胜利时都会保存进攻的决策数据。每场游戏大概会做出30-60种选择。构建一个高效的数据集显然需要非常长的时间（几百局游戏）。
+
+数据集以numpy专用格式存储，直接打开是乱码：
+
+![1563350450725](assets/1563350450725.png)
+
+需要用numpy.load()函数打开
+
+![1563350694662](assets/1563350694662.png)
+
+
+
+### Ch10 建立神经网络模型
+
+上一章中我们终于得到了自己的训练数据。原作者也提供了他自己的数据集：
+
+https://drive.google.com/file/d/1cO0BmbUhE2HsUC5ttQrLQC_wLTdCn2-u/view
+
+你需要在命令行中（例如powershell）安装新软件包：
+
+```
+pip install keras （原文中2.1.2版本无法安装）
+pip install tensorflow-gpu （原文中1.8版本无法安装）
+```
+
+如果你不知道什么是神经网络，那么推荐你先看完以下教程中的deeplearning部分
+
+https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
+
+
+
+### Ch11 训练神经网络
+
+训练数据解压完有**13G**，是的你没有看错。
