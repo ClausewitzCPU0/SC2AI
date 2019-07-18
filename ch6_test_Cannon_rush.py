@@ -7,8 +7,9 @@ import random
 
 import sc2
 from sc2 import Race, Difficulty
-from sc2.constants import *
+from sc2.constants import NEXUS, PROBE, PYLON, FORGE, PHOTONCANNON
 from sc2.player import Bot, Computer
+
 
 class CannonRushBot(sc2.BotAI):
     async def on_step(self, iteration):
@@ -47,19 +48,21 @@ class CannonRushBot(sc2.BotAI):
                 await self.build(PHOTONCANNON, near=pylon)
 
         else:
-            if self.can_afford(PYLON) and self.can_afford(PHOTONCANNON): # ensure "fair" decision
+            if self.can_afford(PYLON) and self.can_afford(PHOTONCANNON):  # ensure "fair" decision
                 for _ in range(20):
                     pos = self.enemy_start_locations[0].random_on_distance(random.randrange(5, 12))
                     building = PHOTONCANNON if self.state.psionic_matrix.covers(pos) else PYLON
                     r = await self.build(building, near=pos)
-                    if not r: # success
+                    if not r:  # success
                         break
+
 
 def main():
     sc2.run_game(sc2.maps.get("AutomatonLE"), [
         Bot(Race.Protoss, CannonRushBot(), name="CheeseCannon"),
         Computer(Race.Protoss, Difficulty.Medium)
     ], realtime=False)
+
 
 if __name__ == '__main__':
     main()

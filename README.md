@@ -8,7 +8,17 @@
 
 https://github.com/deepmind/pysc2
 
-原教程来自youtube [sentdex](https://www.youtube.com/channel/UCfzlCWGWYyIQ0aLC5w48gBQ) ，修复了一些原教程在当前版本可能出现的BUG
+相关文档：
+
+文档目录：https://github.com/Dentosal/python-sc2/wiki
+
+sc2.BotAI类属性（包含一些全局操作API）：https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class
+
+单位及动作：https://github.com/Dentosal/python-sc2/wiki/Units-and-actions
+
+单位能力及对应ID：https://github.com/Dentosal/python-sc2/wiki/Unit-abilities-and-IDs
+
+原教程来自youtube [sentdex](https://www.youtube.com/channel/UCfzlCWGWYyIQ0aLC5w48gBQ) 和github的 [Dentosal](https://github.com/Dentosal) ，修复了一些原教程在当前版本可能出现的BUG
 
 https://www.youtube.com/watch?v=v3LJ6VvpfgI&list=PLQVvvaa0QuDcT3tPehHdisGMc8TInNqdq&index=2&t=0s
 
@@ -34,7 +44,7 @@ https://liquipedia.net/starcraft2/Zerg_Units_(Legacy_of_the_Void)
 
 使用者有一点点Python基础和对星际2的粗略了解即可完成本教程。
 
-本人不是深度学习从业人员，也没有强大的硬件支持，因此暂时不涉及深度学习相关内容。如果教程播放量比较多的话，再考虑后续的部分吧。当然英语过关的老哥也可以自行观看后续内容。deeplearning部分涉及到一些额外知识，推荐先选择性观看sentdex的machine learning series或者B站的莫烦教程，这样在后期训练模型时会对一些术语有一个初步的了解。
+本人不是深度学习从业人员，也没有强大的硬件支持，因此暂时不涉及深度学习相关内容。如果教程播放量比较多的话，再考虑后续的部分吧。当然英语过关的老哥也可以自行观看后续内容。deeplearning部分涉及到一些额外知识，推荐先选择性观看sentdex的machine learning series教程，这样在后期训练模型时会对一些术语有一个初步的了解。
 
 感谢deepmind为开源社区做出的贡献，也向youtube的sentdex致敬。
 
@@ -91,29 +101,57 @@ I don't see why a game needs to be big for someone to love playing it. ——Nan
 
 6. 编写代码并运行，可以看到游戏界面（可能会遇到错误，解决方法看本节最后）
 
+   API查阅：https://github.com/Dentosal/python-sc2/wiki
+
    ```python
    """
    一个简单的入门程序 星际2 4.9.3版本测试通过
    PvP 对手简单电脑 我方AI只采矿 地图为AutomatonLE
    """
    import sc2
+   # run_game用于启动游戏并指定各项启动参数
+   # maps指定游戏在哪张地图上运行。Race选择种族，Difficulty选择电脑难度。
    from sc2 import run_game, maps, Race, Difficulty
+   # Bot和Computer分别指你自己写的AI和游戏内置的电脑
    from sc2.player import Bot, Computer
    
    
-   class SentdeBot(sc2.BotAI): # 查看BotAI的源码可以获得很多有用信息，例如函数定义等
+   class SentdeBot(sc2.BotAI):
+       """
+       这个类就是你要写的AI类，必须要继承sc2.BotAI，很多内置方法都在其中
+       """
+   
        async def on_step(self, iteration: int):
-           await self.distribute_workers() # 分配农民采矿
+           """
+           on_step这个异步方法必须被重写，再此将会调用你设置的每一步指令。
+           """
+           # distribute_workers是内置方法，代表自动让农民采矿
+           await self.distribute_workers()
    
    
    def main():
        run_game(maps.get("AutomatonLE"), [
            Bot(Race.Protoss, SentdeBot()),
-           Computer(Race.Protoss, Difficulty.Easy)], realtime=True)
+           Computer(Race.Protoss, Difficulty.Easy)], realtime=True) 
    
    
    if __name__ == '__main__':
        main()
+   
+   ```
+
+   那么，除了和电脑交战以外，如何**评估自己创造的AI实力**呢？很简单,改动一些代码即可：
+
+   这样就可以与自己创造的AI对战了，运行程序之后会出现两个窗口，一个窗口是你操作的种族(下面代码中你将操作人族)，另一个窗口是你的AI（下面代码中AI使用虫族）。但必须指出的是，这样相当于双开游戏，对电脑配置要求较高（我的电脑已经非常卡了），调至职业选手画质会有很大的改善。
+
+   ```python
+   from sc2 import run_game, maps, Race
+   from sc2.player import Bot, Human
+   
+   run_game(maps.get("AutomatonLE"), [
+       Human(Race.Terran),
+       Bot(Race.Zerg, SentdeBot())
+   ], realtime=True)
    ```
 
    如果游戏放在固态硬盘里，启动会快很多。效果图如下：
@@ -883,3 +921,7 @@ https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
 ### Ch11 训练神经网络
 
 训练数据解压完有**13G**，是的你没有看错。
+
+
+
+学习至11:30秒处
