@@ -17,7 +17,7 @@ class SentdeBot(sc2.BotAI):
 
     async def on_step(self, iteration: int):
         """
-        on_step这个异步方法必须被重写，再此将会调用你设置的每一步指令。
+        on_step这个异步方法必须被重写，在此将会调用你设置的每一步指令。
         """
         # distribute_workers是内置方法，代表自动让农民采矿
         await self.distribute_workers()

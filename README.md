@@ -10,6 +10,8 @@ https://github.com/deepmind/pysc2
 
 相关文档：
 
+wiki：http://wiki.sc2ai.net/Main_Page
+
 文档目录：https://github.com/Dentosal/python-sc2/wiki
 
 sc2.BotAI类属性（包含一些全局操作API）：https://github.com/Dentosal/python-sc2/wiki/The-BotAI-class
@@ -36,6 +38,10 @@ https://liquipedia.net/starcraft2/Terran_Units_(Legacy_of_the_Void)
 
 https://liquipedia.net/starcraft2/Zerg_Units_(Legacy_of_the_Void)
 
+AI天梯：
+
+http://sc2ai.net
+
 
 
 ## 前言
@@ -56,7 +62,7 @@ https://liquipedia.net/starcraft2/Zerg_Units_(Legacy_of_the_Void)
 
 最近Alphastar开始在欧服天梯上匿名训练，让星际玩家又多了几分期待。~~AI小儿只敢隐姓埋名，定是畏惧我谐星战术，真懦夫也。~~感谢暴雪创造了这个伟大的RTS游戏，感谢deepmind为我们揭示了这款游戏的别样魅力，感谢星际2的玩家们成就了电子竞技！
 
-星际2是否是人类在游戏方面与AI抗衡的最后一个堡垒？我们拭目以待。
+星际2是否是人类在游戏方面与AI抗衡的最后一个堡垒？我们拭目以待。 
 
 I don't see why a game needs to be big for someone to love playing it. ——Naniwa
 
@@ -82,7 +88,11 @@ I don't see why a game needs to be big for someone to love playing it. ——Nan
 
 2. https://github.com/deepmind/pysc2    clone仓库或
 
-   直接pip安装（我用的pip）：执行`pip install pysc2` 版本号2.0.2
+   直接pip安装（我用的pip）：
+
+   执行`pip install sc2` 
+
+   执行`pip install pysc2` 版本号2.0.2
 
 3. https://github.com/Blizzard/s2client-proto#downloads 下载地图包，我下载了19年第一赛季的地图
 
@@ -925,3 +935,14 @@ https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
 
 
 学习至11:30秒处
+
+
+
+
+
+## Extra 附加：星际2 AI天梯服务器
+
+https://github.com/Cryptyc/Sc2LadderServer
+
+
+
