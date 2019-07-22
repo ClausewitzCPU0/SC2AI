@@ -940,9 +940,78 @@ https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
 
 
 
-## Extra 附加：星际2 AI天梯服务器
+## Extra：星际2 AI天梯服务器
 
 https://github.com/Cryptyc/Sc2LadderServer
 
+Sc2LadderServer是一个为星际2API所设计的一个天梯服务器。它会加载你写的星际2AI（bots）并执行对战。
 
 
+
+**此处以Linux服务器举例**
+
+#### 依赖项：
+
+- CMake：https://cmake.org/download/   
+
+  下载所需版本 我下载了cmake-3.15.0-Linux-x86_64.tar.gz
+
+- SC2 Linux Packages: https://github.com/Blizzard/s2client-proto#linux-packages 
+
+  我下载了4.7.1   
+
+  解压密码：iagreetotheeula
+
+- 地图包：https://github.com/Blizzard/s2client-proto#map-packs
+
+  我用的 Ladder 2019 Season 1
+
+  解压密码：iagreetotheeula
+
+#### 安装：
+
+1. CMake：https://blog.csdn.net/fxnawm/article/details/78489586
+   注意32位和64 位一定要区分开
+
+   如果是下载的含有source标签的则是源代码文件，需要自己编译，如果下载的是Binary distributions对应的则是已经编译好的版本，只需要添加环境变量就行。
+
+   执行 cmake --version ，出现版本号则说明安装成功。
+
+   ![1563779808678](assets/1563779808678.png)
+
+2. SC2 Linux Packages：解压出StarCraft II文件夹
+
+3. 地图包：解压，解压出的文件夹放入StarCraft II/Maps中
+
+#### 安装Sc2LadderServer：
+
+```shell
+# Get the project.
+$ git clone --recursive https://github.com/Cryptyc/Sc2LadderServer.git
+$ cd Sc2LadderServer
+
+# Create build directory.
+$ mkdir build && cd build
+
+# Generate a Makefile.
+# Use 'cmake -DCMAKE_BUILD_TYPE=Debug ../' if debuginfo is needed
+$ cmake ../
+
+# Build.
+$ make
+```
+
+如果在cmake ../的过程中出现以下错误：
+
+![1563779773545](assets/1563779773545.png)
+
+CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage
+CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
+
+需要更新make：`apt install make`
+
+更新之后编译就可以了。下图为正常编译过程。
+
+![1563779845741](assets/1563779845741.png)
+
+![1563781755072](assets/1563781755072.png)
