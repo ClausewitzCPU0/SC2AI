@@ -13,7 +13,7 @@ from sc2.player import Bot, Computer
 
 class CannonRushBot(sc2.BotAI):
     async def on_step(self, iteration):
-        if iteration == 0:
+        if iteration == 0:  # iteration可以看作是游戏内时钟，
             await self.chat_send("(probe)(pylon)(cannon)(cannon)(gg)")
 
         if not self.units(NEXUS).exists:

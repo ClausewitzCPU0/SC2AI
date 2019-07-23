@@ -93,7 +93,7 @@ class SentdeBot(sc2.BotAI):
         elif len(self.known_enemy_structures) > 0:
             return random.choice(self.known_enemy_structures)
         else:
-            return self.enemy_start_locations[0]
+            return self.enemy_start_locations[0]  # 如果没有发现敌方单位和建筑，就直接定位至对方出生点。
 
     async def attack(self):
         """
@@ -103,7 +103,7 @@ class SentdeBot(sc2.BotAI):
             for s in self.units(STALKER).idle:
                 await self.do(s.attack(self.find_target(self.state)))
 
-        if self.units(STALKER).amount > 5:
+        if self.units(STALKER).amount > 5:  # 数量少时在家防守
             if len(self.known_enemy_units) > 0:
                 for s in self.units(STALKER).idle:
                     await self.do(s.attack(random.choice(self.known_enemy_units)))

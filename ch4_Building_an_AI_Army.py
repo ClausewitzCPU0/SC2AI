@@ -62,7 +62,7 @@ class SentdeBot(sc2.BotAI):
 
     async def offensive_force_buildings(self):
         """
-        建造产兵建筑
+        建造产兵/科技建筑 此处为BG BY
         """
         if self.units(PYLON).ready.exists:
             pylon = self.units(PYLON).ready.random

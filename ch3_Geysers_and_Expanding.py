@@ -26,19 +26,19 @@ class SentdeBot(sc2.BotAI):
 
     async def build_pylons(self):
         """
-        人口空余不足5时造水晶。
+        人口空余不足5 且没有水晶正在建造时，放下水晶。
         """
         if self.supply_left < 5 and not self.already_pending(PYLON):
             nexuses = self.units(NEXUS).ready
             if nexuses.exists:
                 if self.can_afford(PYLON):
-                    await  self.build(PYLON, near=nexuses.first)  # near表示建造地点。后期可以用深度学习优化
+                    await  self.build(PYLON, near=nexuses.first)  # near表示建造地点，具体坐标是基地旁随机的一块范围
 
     async def build_assimilators(self):
         """
         建造气矿
         """
-        for nexus in self.units(NEXUS).ready:
+        for nexus in self.units(NEXUS).ready:  # 在建造好的基地附近寻找气矿
             vespenes = self.state.vespene_geyser.closer_than(25.0, nexus)
             for vespene in vespenes:
                 if not self.can_afford(ASSIMILATOR):
@@ -52,7 +52,7 @@ class SentdeBot(sc2.BotAI):
     async def expand(self):
         """
         何时扩张 简化版
-        基地数量少于3个就立即扩张
+        基地数量少于3个且资源足够的情况下就立即扩张
         """
         if self.units(NEXUS).amount < 3 and self.can_afford(NEXUS):
             await self.expand_now()
