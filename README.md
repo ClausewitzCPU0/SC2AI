@@ -934,13 +934,35 @@ https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
 
 
 
-学习至11:30秒处
+11:30
 
 
 
 
 
-## Extra：星际2 AI天梯服务器
+## Extra1：操作
+
+本小节可以实现你自己的悍马2000。
+
+我们先回顾一下人类选手的最顶级点毒爆操作：
+
+在天梯局中，没有比赛时心理负担的情况下，ByuN究竟有多高的操作上限
+
+https://www.bilibili.com/video/av12256762/?p=3   11分30秒开始
+
+原程序需要在美服用地图编辑器下载“Marine Split Challenge-LOTV”的一张散枪兵练习图。我没法登陆美服的编辑器，就在国服找了一张练习图，效果一样。地图名为Marine Control  v1.4(作者：Morrow)，我把它放在resource文件夹中。值得一提的是，国服还有一张散枪兵演示图，使用银河编辑器的触发器实现甩枪兵，有兴趣的可以看一看。
+
+第一个版本的枪兵操作(文件名：marine1.py) 可以实现完美诸葛连弩 ~~（枪兵王？不过是个操作过硬的LOL选手）~~
+
+第二个版本的枪兵操作(文件名：marine2.py) ，机枪兵在散的同时优先点毒爆和残血单位。（超级瞄准已部署！诸葛连弩算什么？）
+
+下图就是第二个版本的演示。可以看到在不限制APM的情况下，AI可以达到五位数的瞬间APM，单独操作每个枪兵。虽然我们最希望看到的是AI从学习中获得的大局观而不是莽夫操作，但这个例子可以证明pysc2强大而丰富的功能。
+
+![1563854533742](assets/1563854533742.png)
+
+
+
+## Extra2：星际2 AI天梯服务器
 
 https://github.com/Cryptyc/Sc2LadderServer
 
