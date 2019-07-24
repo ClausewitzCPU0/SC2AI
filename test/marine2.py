@@ -88,7 +88,7 @@ class MarineSplitChallenge(sc2.BotAI):
 
     async def on_first_iteration(self):
         await self.chat_send("(glhf)")  # 要发送的消息
-        self._client.game_step = 4  # do actions every X frames instead of every 8th
+        self._client.game_step = 4  # 每4帧执行一次动作。默认值为8帧。这个数值越小，电脑APM越高。
 
     def position_around_unit(self, pos: Union[Unit, Point2, Point3], distance: int = 1, step_size: int = 1,
                              exclude_out_of_bounds: bool = True):

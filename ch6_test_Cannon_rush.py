@@ -55,6 +55,7 @@ class CannonRushBot(sc2.BotAI):
             if self.can_afford(PYLON) and self.can_afford(PHOTONCANNON):  # ensure "fair" decision
                 for _ in range(20):
                     pos = self.enemy_start_locations[0].random_on_distance(random.randrange(5, 12))
+                    # state.psionic_matrix.covers(pos) 神族特有函数，用于检测是否有能量场
                     building = PHOTONCANNON if self.state.psionic_matrix.covers(pos) else PYLON
                     r = await self.build(building, near=pos)
                     if not r:  # success

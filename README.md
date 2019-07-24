@@ -4,7 +4,9 @@
 
 **禁止百家号使用本文任何内容**
 
-程序基于deepmind开源 py-sc2
+程序基于Dentosal开源的python-sc2 和 deepmind开源pysc2(这部分教学不一定能出，训练效果不及预期)
+
+https://github.com/Dentosal/python-sc2
 
 https://github.com/deepmind/pysc2
 
@@ -26,6 +28,8 @@ https://www.youtube.com/watch?v=v3LJ6VvpfgI&list=PLQVvvaa0QuDcT3tPehHdisGMc8TInN
 
 https://pythonprogramming.net/scouting-visual-input-starcraft-ii-ai-python-sc2-tutorial/
 
+How To: PySC2 https://github.com/skjb/pysc2-tutorial
+
 战术策略参考：
 
 https://github.com/Dentosal/python-sc2/tree/master/examples
@@ -42,7 +46,13 @@ AI天梯：
 
 http://sc2ai.net
 
+暴雪官方开源：
 
+s2protocol：https://github.com/Blizzard/s2protocol
+
+s2client-proto：https://github.com/Blizzard/s2client-proto
+
+s2client-api：https://github.com/Blizzard/s2client-api
 
 ## 前言
 
@@ -74,7 +84,7 @@ I don't see why a game needs to be big for someone to love playing it. ——Nan
 
 ### **Ch1. 开发环境简介以及简单的采矿操作**
 
-第一节教程旨在了解星际2 API和pysc2的基本安装、使用方法，并编写一个可以自动采矿的AI。
+第一节教程旨在了解星际2 API和python-sc2、pysc2的基本安装、使用方法，并编写一个可以自动采矿的AI。
 
 我的开发环境：
 
