@@ -198,7 +198,7 @@ Run again and game should work now fully updated on 4 Jul 2019
 
 ### **Ch2. 建造探机和水晶**
 
-本节为AI增加了有余钱时自动建造水晶和探机的AI。不足之处是AI会一直建造探机，哪怕超过采矿效率上限。有概率一次补两个水晶，造成资源浪费。
+本节为AI增加了有余钱时自动建造水晶和探机的机制。不足之处是AI会一直建造探机，哪怕超过采矿效率上限。有概率一次补两个水晶，造成资源浪费。
 
 **部分代码**如下：（完全版代码见文件夹内 ch2_Workers_and_Pylons.py ）
 
@@ -944,7 +944,7 @@ https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
 
 
 
-11:30
+add later...
 
 
 
