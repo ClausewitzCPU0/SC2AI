@@ -78,7 +78,7 @@ class SentdeBot(sc2.BotAI):
         # print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
         game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
 
-        # UNIT:[SIZE,(RGB COLOR)]
+        # UNIT:[SIZE,(BGR COLOR)]
         draw_dict = {
             NEXUS: [15, (0, 255, 0)],
             PYLON: [3, (20, 235, 0)],

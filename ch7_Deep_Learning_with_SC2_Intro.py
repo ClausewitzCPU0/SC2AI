@@ -40,7 +40,7 @@ class SentdeBot(sc2.BotAI):
         for nexus in self.units(NEXUS):
             nex_pos = nexus.position
             cv2.circle(game_data, (int(nex_pos[0]), int(nex_pos[1])),
-                       10, (0, 255, 0), -1)  # 10代表尺寸,三坐标代表RGB,-1代表描边线宽
+                       10, (0, 255, 0), -1)  # 10代表尺寸,元组代表BGR颜色格式(注意不是RGB的排列顺序),-1代表描边线宽
 
         # 转换坐标
         flipped = cv2.flip(game_data, 0)  # 翻转

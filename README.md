@@ -608,7 +608,7 @@ class SentdeBot(sc2.BotAI):
         for nexus in self.units(NEXUS):
             nex_pos = nexus.position
             cv2.circle(game_data, (int(nex_pos[0]), int(nex_pos[1])),
-                       10, (0, 255, 0), -1)  # 10代表尺寸,三坐标代表RGB,-1代表描边线宽
+                       10, (0, 255, 0), -1)  # 10代表尺寸,元组代表BGR颜色格式(注意不是RGB的排列顺序),-1代表描边线宽
 
         # 转换坐标
         flipped = cv2.flip(game_data, 0)  # 翻转
@@ -668,7 +668,7 @@ OpenCV生成的图形是为了让我们更好地了解到游戏内发生的事�
         print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
         game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
 
-        # UNIT:[SIZE,(RGB COLOR)]
+        # UNIT:[SIZE,(BGR COLOR)]
         draw_dict = {
             NEXUS: [15, (0, 255, 0)],
             PYLON: [3, (20, 235, 0)],
@@ -769,7 +769,7 @@ class SentdeBot(sc2.BotAI):
         # print('dir:', dir(self))  # 你总是可以使用dir命令来获取帮助，也可以直接看源码
         game_data = np.zeros((self.game_info.map_size[1], self.game_info.map_size[0], 3), np.uint8)  # 反转图片像素
 
-        # UNIT:[SIZE,(RGB COLOR)]
+        # UNIT:[SIZE,(BGR COLOR)]
         draw_dict = {
             NEXUS: [15, (0, 255, 0)],
             PYLON: [3, (20, 235, 0)],
