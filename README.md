@@ -1,3 +1,7 @@
+# DEPRECATED
+
+# DEPRECATED
+
 # SC2 AI 中文教程
 
 本文作者 @PolestarX **转载请注明出处** 
